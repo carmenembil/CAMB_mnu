@@ -1040,11 +1040,13 @@ class CAMBdata(F2003Class):
         :return: numpy array CL[0:lmax+1,0:4], where 0..3 indexes TT, EE, BB, TE
         """
         lmax = self._lmax_setting(lmax)
-        res = np.empty((lmax + 1, 4))
-        opt = c_int(lmax)
-        CAMB_SetTotCls(byref(self), byref(opt), res)
-        self._scale_cls(res, CMB_unit, raw_cl)
-        return res
+        # JM 2024
+        # res = np.empty((lmax + 1, 4))
+        # opt = c_int(lmax)
+        # CAMB_SetTotCls(byref(self), byref(opt), res)
+        # self._scale_cls(res, CMB_unit, raw_cl)
+        # return res
+        return self.get_lensed_scalar_cls(lmax, CMB_unit, raw_cl) + self.get_tensor_cls(lmax, CMB_unit, raw_cl)
 
     def get_tensor_cls(self, lmax=None, CMB_unit=None, raw_cl=False):
         r"""
@@ -1104,30 +1106,51 @@ class CAMBdata(F2003Class):
         """
 
         lmax = self._lmax_setting(lmax)
-        res = np.empty((lmax + 1, 4))
-        opt = c_int(lmax)
-        CAMB_SetLensedScalCls(byref(self), byref(opt), res)
-        self._scale_cls(res, CMB_unit, raw_cl)
-        return res
+        # JM 2024
+        clpp = self.get_lens_potential_cls()[:,0]
+        return self.get_lensed_cls_with_spectrum(clpp, lmax, CMB_unit, raw_cl)
+        # res = np.empty((lmax + 1, 4))
+        # opt = c_int(lmax)
+        # CAMB_SetLensedScalCls(byref(self), byref(opt), res)
+        # self._scale_cls(res, CMB_unit, raw_cl)
+        # return res
 
     def get_lens_potential_cls(self, lmax=None, CMB_unit=None, raw_cl=False):
-        r"""
-        Get lensing deflection angle potential power spectrum, and cross-correlation with T and E. Must have already
-        calculated power spectra.
+        """
+        Get lensing deflection angle potential power spectrum, and cross-correlation with T and E.
+        Must have already calculated power spectra.
+        
         Power spectra are :math:`[L(L+1)]^2C_L^{\phi\phi}/2\pi` and corresponding deflection cross-correlations.
-
+        
         :param lmax: lmax to output to
-
         :param CMB_unit: scale results from dimensionless. Use 'muK' for :math:`\mu K` units for lensing cross.
         :param raw_cl: return lensing potential :math:`C_L` rather than :math:`[L(L+1)]^2C_L/2\pi`
         :return: numpy array CL[0:lmax+1,0:3], where 0..2 indexes PP, PT, PE.
         """
-
+        
         lmax = self._lmax_setting(lmax, unlensed=True)
         res = np.empty((lmax + 1, 3))
         opt = c_int(lmax)
+        
         CAMB_SetLensPotentialCls(byref(self), byref(opt), res)
         self._scale_cls(res, CMB_unit, raw_cl, lens_potential=True)
+        
+        # JM 2024
+        # if self.Params.Alens_array is not None:
+        #     Alens_array_size = np.ctypeslib.as_array(self.Params.Alens_array).size
+        #     max_ind = np.min(Alens_array_size, lmax+1)
+        #     #print('max_ind is ', max_ind)
+        #     res[:lmax+1,0] *= self.Params.Alens_array[:lmax+1]
+        #     res[:lmax+1,1] *= np.sqrt(self.Params.Alens_array[:lmax+1])
+        #     res[:lmax+1,2] *= np.sqrt(self.Params.Alens_array[:lmax+1])
+        
+        if self.Params.mnu_tilde != 0.:
+            Alens_array_58 = np.loadtxt('/home/ce425/rds/rds-dirac-dp002/ce425/gitreps/CAMB/Alens_58.txt')
+            Alens_array = (Alens_array_58 - 1.) / 0.058 * self.Params.mnu_tilde + 1.
+            res[:lmax+1,0] *= Alens_array[:lmax+1]
+            res[:lmax+1,1] *= np.sqrt(Alens_array[:lmax+1])
+            res[:lmax+1,2] *= np.sqrt(Alens_array[:lmax+1])
+        ##
         return res
 
     def get_unlensed_scalar_array_cls(self, lmax=None):

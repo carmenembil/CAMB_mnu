@@ -16,6 +16,10 @@ CAMB
 .. image:: https://mybinder.org/badge_logo.svg
   :target: https://mybinder.org/v2/gh/cmbant/CAMB/HEAD?filepath=docs%2FCAMBdemo.ipynb
 
+Mnu modification
+=============================
+Implementing simple Alens type modification for negative neutrino mass following Meyers & Green.
+
 Description and installation
 =============================
 

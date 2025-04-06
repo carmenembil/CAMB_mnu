@@ -231,6 +231,9 @@ class CAMBparams(F2003Class):
          "if scalar_initial_condition is initial_vector, the vector of initial condition amplitudes"),
         ("OutputNormalization", c_int, "If non-zero, multipole to normalize the C_L at"),
         ("Alens", c_double, "non-physical scaling amplitude for the CMB lensing spectrum power"),
+        # JM 2024,
+        ("mnu_tilde", c_double, "Value of neutrino mass used for scaling lensing power spectrum"),
+        ##
         ("MassiveNuMethod", c_int, {"names": ["Nu_int", "Nu_trunc", "Nu_approx", "Nu_best"]}),
         ("DoLateRadTruncation", c_bool,
          "If true, use smooth approx to radiation perturbations after decoupling on small"
@@ -438,6 +441,7 @@ class CAMBparams(F2003Class):
                       standard_neutrino_neff=constants.default_nnu, TCMB=constants.COBE_CMBTemp,
                       tau: Optional[float] = None, zrei: Optional[float] = None,
                       Alens=1.0, bbn_predictor: Union[None, str, bbn.BBNPredictor] = None,
+                      mnu_tilde = 0. , # JM 2024
                       theta_H0_range=(10, 100), setter_H0=None):
         r"""
         Sets cosmological parameters in terms of physical densities and parameters (e.g. as used in Planck analyses).
@@ -503,6 +507,8 @@ class CAMBparams(F2003Class):
         self.ombh2 = ombh2
         self.omch2 = omch2
         self.Alens = Alens
+        # JM 2024
+        self.mnu_tilde = mnu_tilde
 
         neutrino_mass_fac = constants.neutrino_mass_fac * (constants.COBE_CMBTemp / TCMB) ** 3
 

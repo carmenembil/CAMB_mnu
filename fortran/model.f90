@@ -166,6 +166,8 @@
 
         real(dl)  :: Alens = 1._dl !Unphysical rescaling parameter of the CMB lensing power
 
+        real(dl)  :: mnu_tilde = 0._dl !Value of mnu used for lensing scaling JM 2024
+
         integer   :: MassiveNuMethod = Nu_best
 
         logical :: DoLateRadTruncation = .true.
